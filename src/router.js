@@ -1,7 +1,8 @@
 import React,{Component} from 'react'
-import { HashRouter,Route,Switch } from 'react-router-dom'
+import { HashRouter,Route,Switch,Redirect } from 'react-router-dom'
 import App from './App'
 import Login from './pages/login'
+import Home from './pages/home'
 import Admin from './admin.js'
 import Buttons from './pages/ui/buttons'
 import Modals from './pages/ui/modals'
@@ -20,16 +21,23 @@ import Order from './pages/order/index'
 import OrderDetail from './pages/order/detail'
 import User from './pages/user/index'
 import BikeMap from './pages/map/index'
+import Bar from './pages/echarts/bar'
+import Pie from './pages/echarts/pie'
+import Line from './pages/echarts/line'
+import Rich from './pages/rich/index'
+import Permission from './pages/permission/index'
 import Common from './common.js'
 export default class IRouter extends Component{
 	render(){
 		return (
 			<HashRouter>
 				<App>
+					<Route exact path="/" render={() => <Redirect to="/admin/home" push />} /> 
 					<Route path="/login" component={Login} />
 					<Route path="/admin" render={()=>
 						<Admin>
 							<Switch>
+								<Route path="/admin/home" component={Home} />
 								<Route path="/admin/ui/buttons" component={Buttons} />
 								<Route path="/admin/ui/modals" component={Modals} />
 								<Route path="/admin/ui/loadings" component={Loadings} />
@@ -45,6 +53,12 @@ export default class IRouter extends Component{
 								<Route path="/admin/order" component={Order} />
 								<Route path="/admin/user" component={User} />
 								<Route path="/admin/bikeMap" component={BikeMap} />
+								<Route path="/admin/charts/bar" component={Bar} />
+								<Route path="/admin/charts/pie" component={Pie} />
+								<Route path="/admin/charts/line" component={Line} />
+								<Route path="/admin/rich" component={Rich} />
+								<Route path="/admin/permission" component={Permission} />
+
 								<Route component={NoMatch} />
 							</Switch>
 							

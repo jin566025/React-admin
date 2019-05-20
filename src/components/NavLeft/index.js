@@ -3,13 +3,45 @@ import menuConfig from '../../config/menuConfig.js'
 import './index.less'
 import { Menu,Icon } from 'antd'
 import {NavLink} from 'react-router-dom'
+import { connect } from 'react-redux'
+import { switchMenu } from '../../redux/action'
 const SubMenu = Menu.SubMenu;
-export default class NavLeft extends Component{
+class NavLeft extends Component{
+	
+	state = {
+		currentKey:''
+	}
 	componentWillMount(){
 		const menuTreeNode = this.renderMenu(menuConfig)
+		let currentKey = window.location.hash.replace(/#|\?.*$/g,'');
+		
+		let currentTitle = this.returnCurrentTitle(currentKey,menuConfig)
+		this.dispatchMenu(currentTitle)
 		this.setState({
+			currentKey,
 			menuTreeNode
 		})
+	}
+	returnCurrentTitle(currentKey,list){
+		let currentTitle = ''
+		outloop:
+		for(let i=0;i<list.length;i++){
+			if(currentKey==list[i].key){
+				currentTitle = list[i].title;
+				break;
+			}else if(list[i].children){
+				for(let j=0;j<list[i].children.length;j++){
+					if(currentKey==list[i].children[j].key){
+						currentTitle = list[i].children[j].title;
+						break outloop;
+					}
+				}
+			}else{
+				currentTitle = ''
+			}
+		}
+		
+		return currentTitle
 	}
 	//菜单渲染
 	renderMenu =(data)=>{
@@ -26,6 +58,18 @@ export default class NavLeft extends Component{
 			</Menu.Item>
 		})
 	}
+	handleClick = ({item,key})=>{
+		if (key == this.state.currentKey) {
+		    return false;
+		}
+		// 事件派发，自动调用reducer，通过reducer保存到store对象中
+		this.dispatchMenu(item.props.title)
+		this.setState({currentKey:key})
+	}
+	dispatchMenu(title){
+		const { dispatch }  = this.props;
+		dispatch(switchMenu(title))
+	}
 	render(){
 		return(
 			<div>
@@ -34,6 +78,8 @@ export default class NavLeft extends Component{
 					<h1>React</h1>
 				</div>
 				<Menu
+					onClick={this.handleClick}
+					selectedKeys={[this.state.currentKey]}
 					theme="dark"
 				>
 					{this.state.menuTreeNode}
@@ -43,3 +89,5 @@ export default class NavLeft extends Component{
 	
 	}
 }
+
+export default connect()(NavLeft);

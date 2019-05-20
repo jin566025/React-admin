@@ -1,5 +1,5 @@
 import React,{Component} from 'react'
-import {Card,Button,Modal,Form,Input,Select,Tree} from 'antd'
+import {Card,Button,Modal,Form,Input,Select,Tree,Transfer} from 'antd'
 import MyTable from '../../components/MyTable'
 import axios from '../../axios'
 import utils from '../../util/utils'
@@ -41,6 +41,54 @@ export default class Permission extends Component{
 			menuInfo:item.menus
 		})
 	}
+	handleUserAuth = ()=>{
+		let item = this.state.selectedItem;
+		if(!item){
+			Modal.info({text:"请选择一个角色"})
+			return;
+		}
+		this.setState({
+			isUserVisible:true,
+			detailInfo:item
+		})
+		this.getRoleUserList(item.id)
+	}
+	handleUserSubmit = ()=>{
+		let data = {};
+		data.user_ids = this.state.targetKeys;
+		data.role_id = this.state.selectedItem.id;
+		console.log(data)
+	}
+	getRoleUserList = (id)=>{
+		axios.ajax({
+			url:'/user_role_list',
+			data:{
+				params:{id}
+			}
+		}).then(res=>{
+			
+			this.getAuthUserList(res.data.result)
+		})
+	}
+	getAuthUserList = (list)=>{
+		const mockData = []
+		const targetKeys = [];
+		if(list && list.length>0){
+			list.map((item,idx)=>{
+				const obj = {
+					key:item.user_id,
+					title:item.user_name,
+					status:item.status
+				}
+				if(obj.status == 1){
+					targetKeys.push(obj.key)
+				}
+				mockData.push(obj)
+				
+			})
+			this.setState({mockData,targetKeys})
+		}
+	}
 	handlePermEditSubmit = ()=>{
 		let data = this.permForm.props.form.getFieldsValue();
 		let menuInfo = this.state.menuInfo
@@ -72,7 +120,7 @@ export default class Permission extends Component{
 				<Card>
 					<Button type="primary" onClick={()=>{this.setState({isVisible:true})}}>创建角色</Button>
 					<Button type="primary" onClick={this.handleRoleSubmit} style={{marginLeft:20}}>设置权限</Button>
-					<Button type="primary" style={{marginLeft:20}}>用户授权</Button>
+					<Button type="primary" onClick={this.handleUserAuth} style={{marginLeft:20}}>用户授权</Button>
 				</Card>
 				<div className="content-wrap">
 				
@@ -118,10 +166,81 @@ export default class Permission extends Component{
 						wrappedComponentRef={(inst)=>this.permForm = inst}
 					/>
 				</Modal>
+				
+				
+				<Modal 
+					title="用户授权"
+					visible={this.state.isUserVisible}
+					width={800}
+					onOk={this.handleUserSubmit}
+					onCancel={()=>{
+						this.setState({isUserVisible:false})
+					}}
+				>
+					<RoleAuthForm 
+						detailInfo={this.state.detailInfo} 
+						targetKeys={this.state.targetKeys}
+						mockData={this.state.mockData}
+						patchUserInfo={(targetKeys)=>{
+							this.setState({targetKeys})
+						}}
+						wrappedComponentRef={(inst)=>this.userAuthForm = inst}
+					/>
+				</Modal>
 			</div>
 		)
 	}
 }
+
+class RoleAuthForm extends Component{
+	
+
+	filterOption = (inputValue,option)=>{
+		return option.title.indexOf(inputValue) > -1;
+	}
+	
+	handleChange = (targetKeys)=>{
+		this.props.patchUserInfo(targetKeys)
+	}
+	render(){
+		const { getFieldDecorator } = this.props.form;
+		const formItemLayout = {
+			labelCol:{
+				span:5
+			},
+			wrapperCol:{
+				span:15
+			}
+		}
+		const detail_info = this.props.detailInfo;
+		const menuInfo = this.props.menuInfo;
+		return (
+			<Form layout="horizontal" {...formItemLayout}>
+				<FormItem label="角色名称">
+					<Input disabled placeholder={detail_info.role_name} />
+				</FormItem>
+				<FormItem label="选择用户">
+					<Transfer
+						listStyle={{width:200,height:400}}
+						dataSource={this.props.mockData}
+						titles={['待选用户','已选用户']}
+						searchPlaceHolder='输入用户名'
+						showSearch
+						filterOption={this.filterOption}
+						targetKeys={this.props.targetKeys}
+						onChange={this.handleChange}
+						render={item=>item.title}
+					>
+					</Transfer>
+				</FormItem>
+				
+
+			</Form>
+		)
+	}
+}
+RoleAuthForm = Form.create({})(RoleAuthForm)
+
 
 class CreateForm extends Component{
 	render(){

@@ -1,28 +1,32 @@
 import React,{Component} from 'react'
-import menuConfig from '../../config/menuConfig.js'
+// import menuConfig from '../../config/menuConfig.js'
 import './index.less'
 import { Menu,Icon } from 'antd'
-import {NavLink} from 'react-router-dom'
+import { NavLink,Redirect } from 'react-router-dom'
 import { connect } from 'react-redux'
-import { switchMenu } from '../../redux/action'
+import { switchMenu } from '../../redux/action/switchMenu'
+import { setCurrentKey } from '../../redux/action/setCurrentKey'
 const SubMenu = Menu.SubMenu;
 class NavLeft extends Component{
-	
 	state = {
 		currentKey:''
 	}
 	componentWillMount(){
+		let menuConfig = this.props.navs;
 		const menuTreeNode = this.renderMenu(menuConfig)
 		let currentKey = window.location.hash.replace(/#|\?.*$/g,'');
 		
 		let currentTitle = this.returnCurrentTitle(currentKey,menuConfig)
-		this.dispatchMenu(currentTitle)
+		this.dispatchMenu(currentTitle,currentKey)
 		this.setState({
-			currentKey,
+			// currentKey,
 			menuTreeNode
 		})
 	}
 	returnCurrentTitle(currentKey,list){
+		if(!list){
+			return false;
+		}
 		let currentTitle = ''
 		outloop:
 		for(let i=0;i<list.length;i++){
@@ -45,30 +49,36 @@ class NavLeft extends Component{
 	}
 	//菜单渲染
 	renderMenu =(data)=>{
-		return data.map((item)=>{
-			if(item.children){
-				return (
-					<SubMenu title={item.title} key={item.key}>
-						{ this.renderMenu(item.children) }
-					</SubMenu>
-				)
-			}
-			return <Menu.Item title={item.title} key={item.key}>
-				<NavLink to={item.key}>{item.title}</NavLink>
-			</Menu.Item>
-		})
+		if(data.length>0){
+			return data.map((item)=>{
+				if(item.children){
+					return (
+						<SubMenu title={item.title} key={item.key}>
+							{ this.renderMenu(item.children) }
+						</SubMenu>
+					)
+				}
+				return <Menu.Item title={item.title} key={item.key}>
+					<NavLink to={item.key}>{item.title}</NavLink>
+				</Menu.Item>
+			})
+		}else{
+			return (<Redirect to="/login" />)
+		}
+		
 	}
 	handleClick = ({item,key})=>{
-		if (key == this.state.currentKey) {
+		if (key == this.props.currentKey) {
 		    return false;
 		}
 		// 事件派发，自动调用reducer，通过reducer保存到store对象中
-		this.dispatchMenu(item.props.title)
-		this.setState({currentKey:key})
+		this.dispatchMenu(item.props.title,key)
+		// this.setState({currentKey:key})
 	}
-	dispatchMenu(title){
+	dispatchMenu(title,key){
 		const { dispatch }  = this.props;
 		dispatch(switchMenu(title))
+		dispatch(setCurrentKey(key))
 	}
 	render(){
 		return(
@@ -79,7 +89,7 @@ class NavLeft extends Component{
 				</div>
 				<Menu
 					onClick={this.handleClick}
-					selectedKeys={[this.state.currentKey]}
+					selectedKeys={[this.props.currentKey]}
 					theme="dark"
 				>
 					{this.state.menuTreeNode}
@@ -89,5 +99,12 @@ class NavLeft extends Component{
 	
 	}
 }
-
-export default connect()(NavLeft);
+const mapStateToProps = state =>{
+	if(state){
+		return {
+			navs:state.navs,
+			currentKey:state.currentKey
+		}
+	}
+}
+export default connect(mapStateToProps)(NavLeft);

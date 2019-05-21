@@ -3,13 +3,12 @@ import { Row,Col } from 'antd'
 import './index.less'
 import Util from '../../util/utils'
 import axios from '../../axios'
+import { Link } from 'react-router-dom'
 import {connect} from 'react-redux'
 class Header extends Component{
 	state={}
 	componentWillMount(){
-		this.setState({
-			username:"金大圣呐"
-		})
+		
 		setInterval(()=>{
 			let sysTime = Util.formateDate(new Date().getTime());
 			this.setState({
@@ -33,6 +32,7 @@ class Header extends Component{
 			}
 		})
 	}
+
 	render(){
 		const menuType = this.props.menuType;
 		return(
@@ -48,8 +48,8 @@ class Header extends Component{
 							''
 					}
 					<Col span={menuType?18:24}>
-						<span>欢迎━(*｀∀´*)ノ亻!,{this.state.username}</span>
-						<a href="#">退出</a>
+						<span>欢迎━(*｀∀´*)ノ亻!,{this.props.userName}</span>
+						<Link to="/login">退出</Link>
 					</Col>
 				</Row>
 				{
@@ -73,9 +73,9 @@ const mapStateToProps = state =>{
 	console.log(state)
 	if(state){
 		return {
-			menuName:state.menuName
+			menuName:state.menuName,
+			userName:state.userName
 		}
 	}
-	
 }
 export default connect(mapStateToProps)(Header)

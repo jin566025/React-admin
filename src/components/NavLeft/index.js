@@ -8,9 +8,7 @@ import { switchMenu } from '../../redux/action/switchMenu'
 import { setCurrentKey } from '../../redux/action/setCurrentKey'
 const SubMenu = Menu.SubMenu;
 class NavLeft extends Component{
-	state = {
-		currentKey:''
-	}
+	state = {}
 	componentWillMount(){
 		let menuConfig = this.props.navs;
 		const menuTreeNode = this.renderMenu(menuConfig)
